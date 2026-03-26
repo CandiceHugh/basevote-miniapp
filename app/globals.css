@@ -3,41 +3,45 @@
 @tailwind utilities;
 
 :root {
-  --bg: #f3efe4;
-  --surface: rgba(255, 255, 255, 0.82);
-  --surface-strong: #fffaf0;
-  --ink: #14213d;
-  --muted: #5f6c7b;
-  --line: rgba(20, 33, 61, 0.12);
+  --bg-top: #f7efe1;
+  --bg-bottom: #efe7d2;
+  --surface: rgba(255, 251, 244, 0.84);
+  --ink: #1f2a37;
+  --muted: #667085;
+  --line: rgba(31, 42, 55, 0.12);
   --accent: #0052ff;
-  --accent-2: #f4a261;
+  --accent-soft: rgba(0, 82, 255, 0.1);
   --success: #18794e;
+  --success-soft: rgba(24, 121, 78, 0.12);
   --warning: #b45309;
+  --warning-soft: rgba(180, 83, 9, 0.12);
   --error: #b42318;
-  --shadow: 0 20px 45px rgba(20, 33, 61, 0.12);
+  --error-soft: rgba(180, 35, 24, 0.12);
+  --shadow: 0 24px 60px rgba(31, 42, 55, 0.14);
 }
 
 * {
   box-sizing: border-box;
 }
 
-html {
+html,
+body {
   min-height: 100%;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
   color: var(--ink);
   background:
     radial-gradient(circle at top left, rgba(244, 162, 97, 0.35), transparent 28%),
     radial-gradient(circle at top right, rgba(0, 82, 255, 0.18), transparent 24%),
-    linear-gradient(180deg, #fdf7ea 0%, #f5efe2 45%, #ebe4d5 100%);
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
   font-family: var(--font-geist-sans), sans-serif;
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -46,53 +50,56 @@ button {
 }
 
 .page-shell {
-  width: min(1180px, calc(100% - 32px));
+  width: min(1180px, calc(100% - 28px));
   margin: 0 auto;
-  padding: 40px 0 56px;
+  padding: 28px 0 56px;
 }
 
 .hero-card,
 .panel-card,
-.pool-card {
+.proposal-card {
   border: 1px solid var(--line);
   border-radius: 28px;
   background: var(--surface);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(16px);
   box-shadow: var(--shadow);
 }
 
 .hero-card {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.9fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.95fr);
+  gap: 22px;
   padding: 28px;
 }
 
 .hero-copy h1,
 .section-header h2,
-.pool-card h3 {
+.proposal-card h3 {
   margin: 0;
   font-family: var(--font-geist-mono), monospace;
   letter-spacing: -0.04em;
 }
 
 .hero-copy h1 {
-  font-size: clamp(2.75rem, 7vw, 5.4rem);
+  font-size: clamp(2.5rem, 7vw, 5rem);
   line-height: 0.95;
 }
 
 .hero-copy p,
 .muted-text,
-.pool-meta p {
+.proposal-meta p,
+.proposal-description {
   color: var(--muted);
 }
 
 .eyebrow {
   display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 12px;
-  padding: 6px 12px;
+  padding: 7px 12px;
   border-radius: 999px;
-  background: rgba(0, 82, 255, 0.08);
+  background: var(--accent-soft);
   color: var(--accent);
   font-size: 0.76rem;
   font-weight: 700;
@@ -100,32 +107,57 @@ button {
   text-transform: uppercase;
 }
 
+.hero-meta-grid,
+.content-grid,
+.form-grid,
+.button-stack,
+.proposal-stack,
+.action-row,
+.vote-stats-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.hero-meta-grid {
+  margin-top: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.hero-meta-card {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.hero-meta-card span,
+.hero-meta-card small {
+  color: var(--muted);
+}
+
+.hero-meta-card strong,
+.hero-meta-card small {
+  word-break: break-all;
+}
+
 .wallet-panel,
 .panel-card,
-.pool-card {
+.proposal-card {
   padding: 24px;
 }
 
 .wallet-panel {
   border-radius: 24px;
-  background: linear-gradient(180deg, rgba(20, 33, 61, 0.96), rgba(26, 62, 132, 0.94));
-  color: white;
+  background: linear-gradient(180deg, rgba(20, 33, 61, 0.96), rgba(24, 63, 141, 0.94));
+  color: #fff;
 }
 
 .panel-title {
   margin: 0 0 12px;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
-}
-
-.button-stack,
-.button-row,
-.content-grid,
-.pool-stack,
-.action-block,
-.form-grid {
-  display: grid;
-  gap: 14px;
 }
 
 .address-pill,
@@ -143,13 +175,13 @@ button {
 }
 
 .status-pill.live {
-  background: rgba(0, 82, 255, 0.1);
+  background: var(--accent-soft);
   color: var(--accent);
 }
 
-.status-pill.settled {
-  background: rgba(24, 121, 78, 0.12);
-  color: var(--success);
+.status-pill.ended {
+  background: var(--warning-soft);
+  color: var(--warning);
 }
 
 .primary-button,
@@ -162,12 +194,12 @@ button {
 }
 
 .primary-button {
-  background: linear-gradient(135deg, var(--accent), #2a74ff);
-  color: white;
+  background: linear-gradient(135deg, var(--accent), #2b75ff);
+  color: #fff;
 }
 
 .secondary-button {
-  background: rgba(20, 33, 61, 0.08);
+  background: rgba(31, 42, 55, 0.08);
   color: var(--ink);
 }
 
@@ -184,54 +216,62 @@ button {
 }
 
 .warning-text,
-.success-text {
+.success-text,
+.warning-text-inline {
   margin: 0;
   font-size: 0.95rem;
 }
 
-.warning-text {
-  color: #ffd6a5;
+.warning-text,
+.warning-text-inline {
+  color: #ffe3b3;
 }
 
 .success-text {
-  color: #c6f6d5;
+  color: #ccf0dd;
 }
 
-.content-grid {
+.governance-grid {
   margin-top: 24px;
-  grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+  grid-template-columns: minmax(320px, 390px) minmax(0, 1fr);
   align-items: start;
 }
 
 .section-header,
-.pool-card-header {
+.proposal-card-header,
+.list-header {
   display: flex;
-  align-items: start;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
 }
 
-.form-grid label,
-.action-block label {
+.form-grid label {
   display: grid;
   gap: 8px;
   font-weight: 600;
 }
 
 .form-grid input,
-.action-block input {
+.form-grid textarea {
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.88);
   color: var(--ink);
+}
+
+.form-grid textarea {
+  resize: vertical;
 }
 
 .warning-banner,
 .error-banner,
 .loading-banner,
-.empty-banner {
+.empty-banner,
+.success-banner,
+.info-banner {
   margin: 0 0 16px;
   padding: 14px 16px;
   border-radius: 16px;
@@ -239,48 +279,61 @@ button {
 }
 
 .warning-banner {
-  background: rgba(244, 162, 97, 0.12);
+  background: var(--warning-soft);
   color: var(--warning);
 }
 
 .error-banner {
-  background: rgba(180, 35, 24, 0.1);
+  background: var(--error-soft);
   color: var(--error);
 }
 
 .loading-banner {
-  background: rgba(0, 82, 255, 0.08);
+  background: var(--accent-soft);
   color: var(--accent);
 }
 
-.empty-banner {
-  background: rgba(20, 33, 61, 0.06);
+.empty-banner,
+.info-banner {
+  background: rgba(31, 42, 55, 0.06);
   color: var(--muted);
 }
 
-.pool-card {
-  background: linear-gradient(180deg, rgba(255, 250, 240, 0.96), rgba(255, 255, 255, 0.84));
+.success-banner {
+  background: var(--success-soft);
+  color: var(--success);
 }
 
-.pool-meta {
+.list-panel {
+  min-height: 520px;
+}
+
+.proposal-card {
+  display: grid;
+  gap: 16px;
+  background: linear-gradient(180deg, rgba(255, 252, 248, 0.95), rgba(255, 255, 255, 0.84));
+}
+
+.proposal-description {
+  margin: 10px 0 0;
+  line-height: 1.65;
+}
+
+.proposal-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 20px;
-  margin: 14px 0 18px;
+  gap: 10px 20px;
 }
 
-.pool-meta p {
+.proposal-meta p {
   margin: 0;
 }
 
-.option-grid {
-  display: grid;
+.vote-stats-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 18px;
 }
 
-.option-card {
+.vote-stat {
   display: grid;
   gap: 6px;
   padding: 18px;
@@ -288,37 +341,51 @@ button {
   border: 1px solid var(--line);
 }
 
-.option-card.option-a {
-  background: rgba(0, 82, 255, 0.07);
+.vote-stat.yes {
+  background: rgba(0, 82, 255, 0.08);
 }
 
-.option-card.option-b {
-  background: rgba(244, 162, 97, 0.12);
+.vote-stat.no {
+  background: rgba(244, 162, 97, 0.14);
+}
+
+.vote-stat strong {
+  font-size: 1.8rem;
+}
+
+.result-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.action-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 @media (max-width: 980px) {
   .hero-card,
-  .content-grid {
+  .governance-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
   .page-shell {
-    width: min(100% - 20px, 1180px);
-    padding-top: 20px;
+    width: min(100% - 18px, 1180px);
+    padding-top: 18px;
   }
 
   .hero-card,
-  .wallet-panel,
   .panel-card,
-  .pool-card {
+  .proposal-card,
+  .wallet-panel {
     padding: 18px;
     border-radius: 22px;
   }
 
-  .option-grid,
-  .button-row {
+  .hero-meta-grid,
+  .vote-stats-grid,
+  .action-row {
     grid-template-columns: 1fr;
   }
 }
