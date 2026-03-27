@@ -6,11 +6,11 @@ import Providers from './providers'
 
 export const metadata: Metadata = {
   title: 'BaseVote',
-  description: '基于 Base 的链上治理投票系统',
+  description: 'An onchain prediction pool mini app built on Base',
   metadataBase: new URL(SITE_URL),
   openGraph: {
     title: 'BaseVote',
-    description: '基于 Base 的链上治理投票系统',
+    description: 'An onchain prediction pool mini app built on Base',
     url: SITE_URL,
     images: ['/og.png'],
   },
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="en">
       <head>
         <meta name="base:app_id" content={BASE_APP_ID} />
         <meta name="talentapp:project_verification" content={PROJECT_VERIFICATION} />

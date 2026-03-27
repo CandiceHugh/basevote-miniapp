@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo } from 'react'
 import { useReadContract, useReadContracts } from 'wagmi'
-import { BaseVoteABI, CONTRACT_ADDRESS, type Proposal } from '@/contracts/BaseVoteABI'
+import {
+  BasePlayPredictionABI,
+  CONTRACT_ADDRESS,
+  type PredictionPool,
+} from '@/contracts/BasePlayPredictionABI'
 import ProposalCard from './ProposalCard'
 
 type ProposalListProps = {
@@ -21,35 +25,35 @@ export default function ProposalList({
   refreshKey,
 }: ProposalListProps) {
   const {
-    data: proposalCount,
+    data: poolCount,
     error: countError,
     isLoading: isCountLoading,
     refetch: refetchCount,
   } = useReadContract({
-    abi: BaseVoteABI,
+    abi: BasePlayPredictionABI,
     address: CONTRACT_ADDRESS,
-    functionName: 'proposalCount',
+    functionName: 'poolCount',
     query: {
       refetchInterval: 15000,
     },
   })
 
   const ids = useMemo(
-    () => Array.from({ length: Number(proposalCount ?? 0n) }, (_, index) => BigInt(index + 1)),
-    [proposalCount]
+    () => Array.from({ length: Number(poolCount ?? 0n) }, (_, index) => BigInt(index + 1)),
+    [poolCount]
   )
 
   const {
-    data: proposalsData,
+    data: poolsData,
     error: proposalsError,
     isLoading: isProposalsLoading,
     refetch: refetchProposals,
   } = useReadContracts({
     allowFailure: true,
     contracts: ids.map((id) => ({
-      abi: BaseVoteABI,
+      abi: BasePlayPredictionABI,
       address: CONTRACT_ADDRESS,
-      functionName: 'proposals' as const,
+      functionName: 'getPool' as const,
       args: [id],
     })),
     query: {
@@ -64,26 +68,27 @@ export default function ProposalList({
   }, [refreshKey, refetchCount, refetchProposals])
 
   const proposals = useMemo(() => {
-    if (!proposalsData) return []
+    if (!poolsData) return []
 
-    return proposalsData
+    return poolsData
       .map((item, index) => {
         if (item.status !== 'success') return null
-        const result = item.result as readonly [string, string, bigint, bigint, bigint, boolean]
-        const proposal: Proposal = {
+        const result = item.result as readonly [string, string, bigint, bigint, bigint, boolean, number]
+        const proposal: PredictionPool = {
           id: Number(ids[index]),
-          title: result[0],
-          description: result[1],
+          teamA: result[0],
+          teamB: result[1],
           deadline: result[2],
-          yesVotes: result[3],
-          noVotes: result[4],
-          exists: result[5],
+          totalA: result[3],
+          totalB: result[4],
+          resolved: result[5],
+          winner: Number(result[6]),
         }
-        return proposal.exists ? proposal : null
+        return proposal
       })
       .filter(Boolean)
-      .reverse() as Proposal[]
-  }, [ids, proposalsData])
+      .reverse() as PredictionPool[]
+  }, [ids, poolsData])
 
   function handleRefresh() {
     void refetchCount()
@@ -95,33 +100,33 @@ export default function ProposalList({
     <section className="panel-card list-panel">
       <div className="section-header list-header">
         <div>
-          <span className="eyebrow">Proposal List</span>
-          <h2>链上提案</h2>
-          <p className="muted-text">从合约实时读取提案，按最新创建顺序倒序展示。</p>
+          <span className="eyebrow">Pool List</span>
+          <h2>Onchain Prediction Pools</h2>
+          <p className="muted-text">Read pools live from the contract and show the newest first.</p>
         </div>
         <button className="secondary-button" onClick={handleRefresh} type="button">
-          刷新列表
+          Refresh
         </button>
       </div>
 
       {!isConnected ? (
-        <p className="warning-banner">未连接钱包，可以浏览提案，但不能创建和投票。</p>
+        <p className="warning-banner">Wallet not connected. You can browse pools but cannot bet or create.</p>
       ) : !isOnBase ? (
-        <p className="warning-banner">当前不是 Base 链，投票和创建入口已禁用。</p>
+        <p className="warning-banner">You are not on Base. Betting and creation are disabled.</p>
       ) : (
-        <p className="success-banner">已连接 Base，可对未结束提案进行投票。</p>
+        <p className="success-banner">Connected to Base. You can bet on open pools and claim resolved wins.</p>
       )}
 
       {(countError || proposalsError) && (
-        <p className="error-banner">读取提案失败，请确认当前网络可访问 Base 合约。</p>
+        <p className="error-banner">Failed to load pools. Make sure the Base contract is reachable.</p>
       )}
 
       {(isCountLoading || isProposalsLoading) && (
-        <p className="loading-banner">正在从链上加载提案列表...</p>
+        <p className="loading-banner">Loading pools from the chain...</p>
       )}
 
       {!isCountLoading && !countError && proposals.length === 0 && (
-        <p className="empty-banner">当前还没有提案，创建第一个提案开始治理吧。</p>
+        <p className="empty-banner">No pools yet. Create the first pool to get started.</p>
       )}
 
       <div className="proposal-stack">

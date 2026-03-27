@@ -111,6 +111,7 @@ button {
 .content-grid,
 .form-grid,
 .button-stack,
+.action-stack,
 .proposal-stack,
 .action-row,
 .vote-stats-grid {
@@ -264,6 +265,15 @@ button {
 
 .form-grid textarea {
   resize: vertical;
+}
+
+.bet-amount-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ink);
 }
 
 .warning-banner,

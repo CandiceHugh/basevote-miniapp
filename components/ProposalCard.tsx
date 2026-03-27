@@ -2,9 +2,19 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { zeroAddress } from 'viem'
-import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
-import { BaseVoteABI, CONTRACT_ADDRESS, type Proposal } from '@/contracts/BaseVoteABI'
+import { formatEther, parseEther, zeroAddress } from 'viem'
+import {
+  useAccount,
+  useReadContract,
+  useReadContracts,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from 'wagmi'
+import {
+  BasePlayPredictionABI,
+  CONTRACT_ADDRESS,
+  type PredictionPool,
+} from '@/contracts/BasePlayPredictionABI'
 import { APP_NAME, TRACKING_APP_ID } from '@/lib/appConfig'
 import { trackTransaction } from '@/utils/track'
 
@@ -13,17 +23,17 @@ type ProposalCardProps = {
   isConnected: boolean
   isOnBase: boolean
   onActionComplete: () => void
-  proposal: Proposal
+  proposal: PredictionPool
 }
 
 function formatDeadline(deadline: bigint) {
-  return new Date(Number(deadline) * 1000).toLocaleString('zh-CN', {
+  return new Date(Number(deadline) * 1000).toLocaleString('en-US', {
     hour12: false,
   })
 }
 
 function formatCountdown(remainingSeconds: number) {
-  if (remainingSeconds <= 0) return '已结束'
+  if (remainingSeconds <= 0) return 'Ended'
 
   const hours = Math.floor(remainingSeconds / 3600)
   const minutes = Math.floor((remainingSeconds % 3600) / 60)
@@ -41,7 +51,8 @@ export default function ProposalCard({
 }: ProposalCardProps) {
   const { address } = useAccount()
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000))
-  const [pendingVote, setPendingVote] = useState<boolean | null>(null)
+  const [betAmount, setBetAmount] = useState('0.001')
+  const [pendingAction, setPendingAction] = useState<string | null>(null)
   const handledHashRef = useRef<`0x${string}` | null>(null)
 
   useEffect(() => {
@@ -52,31 +63,58 @@ export default function ProposalCard({
     return () => window.clearInterval(timer)
   }, [])
 
-  const isEnded = BigInt(now) >= proposal.deadline
-  const countdown = formatCountdown(Number(proposal.deadline) - now)
-
   const {
-    data: votedData,
-    isLoading: isVoteStateLoading,
-    refetch: refetchHasVoted,
+    data: ownerData,
   } = useReadContract({
-    abi: BaseVoteABI,
+    abi: BasePlayPredictionABI,
     address: CONTRACT_ADDRESS,
-    functionName: 'hasVoted',
-    args: [BigInt(proposal.id), address ?? zeroAddress],
+    functionName: 'owner',
     query: {
-      enabled: Boolean(address),
       refetchInterval: 15000,
     },
   })
 
-  const { data: resultData, refetch: refetchResult } = useReadContract({
-    abi: BaseVoteABI,
+  const {
+    data: latestPoolData,
+    refetch: refetchPool,
+  } = useReadContract({
+    abi: BasePlayPredictionABI,
     address: CONTRACT_ADDRESS,
-    functionName: 'getResult',
+    functionName: 'getPool',
     args: [BigInt(proposal.id)],
     query: {
-      enabled: isEnded,
+      refetchInterval: 15000,
+    },
+  })
+
+  const {
+    data: userBetState,
+    isLoading: isBetStateLoading,
+    refetch: refetchBetState,
+  } = useReadContracts({
+    allowFailure: false,
+    contracts: [
+      {
+        abi: BasePlayPredictionABI,
+        address: CONTRACT_ADDRESS,
+        functionName: 'betA',
+        args: [BigInt(proposal.id), address ?? zeroAddress],
+      },
+      {
+        abi: BasePlayPredictionABI,
+        address: CONTRACT_ADDRESS,
+        functionName: 'betB',
+        args: [BigInt(proposal.id), address ?? zeroAddress],
+      },
+      {
+        abi: BasePlayPredictionABI,
+        address: CONTRACT_ADDRESS,
+        functionName: 'claimed',
+        args: [BigInt(proposal.id), address ?? zeroAddress],
+      },
+    ],
+    query: {
+      enabled: Boolean(address),
       refetchInterval: 15000,
     },
   })
@@ -103,15 +141,15 @@ export default function ProposalCard({
 
   useEffect(() => {
     if (writeError) {
-      toast.error(writeError.message || '投票失败。')
-      setPendingVote(null)
+      toast.error(writeError.message || 'Transaction failed.')
+      setPendingAction(null)
     }
   }, [writeError])
 
   useEffect(() => {
     if (receiptError) {
-      toast.error(receiptError.message || '投票确认失败。')
-      setPendingVote(null)
+      toast.error(receiptError.message || 'Transaction confirmation failed.')
+      setPendingAction(null)
     }
   }, [receiptError])
 
@@ -125,61 +163,136 @@ export default function ProposalCard({
       if (address) {
         await trackTransaction(TRACKING_APP_ID, APP_NAME, address, receipt.transactionHash)
       }
-      toast.success('投票成功，列表已刷新。')
-      setPendingVote(null)
-      await refetchHasVoted()
-      await refetchResult()
+      toast.success('Transaction submitted successfully. The list has been refreshed.')
+      setPendingAction(null)
+      await refetchBetState()
+      await refetchPool()
       onActionComplete()
       reset()
     })()
-  }, [address, isConfirmed, onActionComplete, receipt, refetchHasVoted, refetchResult, reset])
+  }, [address, isConfirmed, onActionComplete, receipt, refetchBetState, refetchPool, reset])
 
-  const hasVoted = Boolean(votedData)
+  const poolData =
+    (latestPoolData as readonly [string, string, bigint, bigint, bigint, boolean, number] | undefined) ??
+    ([proposal.teamA, proposal.teamB, proposal.deadline, proposal.totalA, proposal.totalB, proposal.resolved, proposal.winner] as const)
+  const teamA = poolData[0]
+  const teamB = poolData[1]
+  const deadline = poolData[2]
+  const totalA = poolData[3]
+  const totalB = poolData[4]
+  const resolved = poolData[5]
+  const winner = Number(poolData[6])
+  const totalPool = totalA + totalB
+  const teamAPercent = totalPool > 0n ? Number((totalA * 100n) / totalPool) : 0
+  const teamBPercent = totalPool > 0n ? Number((totalB * 100n) / totalPool) : 0
+  const isBetClosed = BigInt(now) >= deadline
+  const countdown = formatCountdown(Number(deadline) - now)
   const isBusy = isPending || isConfirming
-  const endedResult = resultData as readonly [bigint, bigint, boolean] | undefined
-  const yesVotes = endedResult?.[0] ?? proposal.yesVotes
-  const noVotes = endedResult?.[1] ?? proposal.noVotes
-  const totalVotes = yesVotes + noVotes
-  const yesPercent = totalVotes > 0n ? Number((yesVotes * 100n) / totalVotes) : 0
-  const noPercent = totalVotes > 0n ? Number((noVotes * 100n) / totalVotes) : 0
-  const resultText = useMemo(() => {
-    if (!isEnded) return '投票进行中'
-    if (yesVotes === noVotes) return '结果：平票'
-    return yesVotes > noVotes ? '结果：Yes 通过' : '结果：No 通过'
-  }, [isEnded, noVotes, yesVotes])
+  const isOwner = Boolean(
+    address &&
+      ownerData &&
+      typeof ownerData === 'string' &&
+      ownerData.toLowerCase() === address.toLowerCase()
+  )
+  const betState = userBetState as readonly [bigint, bigint, boolean] | undefined
+  const betAAmount = betState?.[0] ?? 0n
+  const betBAmount = betState?.[1] ?? 0n
+  const alreadyClaimed = Boolean(betState?.[2])
+  const hasWinningBet = (winner === 1 && betAAmount > 0n) || (winner === 2 && betBAmount > 0n)
 
-  function handleVote(support: boolean) {
+  const resultText = useMemo(() => {
+    if (!resolved) {
+      return isBetClosed ? 'Betting closed, awaiting result' : 'Betting is active'
+    }
+    return `Winner: ${winner === 1 ? teamA : teamB}`
+  }, [isBetClosed, resolved, teamA, teamB, winner])
+
+  function handleBet(side: 1 | 2) {
     if (!isConnected || !address) {
-      toast.error('请先连接钱包。')
+      toast.error('Connect your wallet first.')
       return
     }
 
     if (!isOnBase) {
-      toast.error('当前不是 Base 链，无法投票。')
+      toast.error('You are not on Base.')
       return
     }
 
-    if (!proposal.exists) {
-      toast.error('提案不存在。')
+    if (isBetClosed) {
+      toast.error('Betting has closed for this pool.')
       return
     }
 
-    if (isEnded) {
-      toast.error('投票已结束。')
+    let value: bigint
+    try {
+      value = parseEther(betAmount)
+    } catch {
+      toast.error('Enter a valid ETH amount.')
       return
     }
 
-    if (hasVoted) {
-      toast.error('你已经投过票，不能重复投票。')
+    if (value <= 0n) {
+      toast.error('Bet amount must be greater than 0.')
       return
     }
 
-    setPendingVote(support)
+    setPendingAction(side === 1 ? 'betA' : 'betB')
     writeContract({
       address: CONTRACT_ADDRESS,
-      abi: BaseVoteABI,
-      functionName: 'vote',
-      args: [BigInt(proposal.id), support],
+      abi: BasePlayPredictionABI,
+      functionName: 'bet',
+      args: [BigInt(proposal.id), side],
+      value,
+    })
+  }
+
+  function handleSetResult(nextWinner: 1 | 2) {
+    if (!isConnected || !address) {
+      toast.error('Connect your wallet first.')
+      return
+    }
+
+    if (!isOnBase) {
+      toast.error('You are not on Base.')
+      return
+    }
+
+    if (!isOwner) {
+      toast.error('Only the owner can set the result.')
+      return
+    }
+
+    setPendingAction(nextWinner === 1 ? 'resolveA' : 'resolveB')
+    writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: BasePlayPredictionABI,
+      functionName: 'setResult',
+      args: [BigInt(proposal.id), nextWinner],
+    })
+  }
+
+  function handleClaim() {
+    if (!isConnected || !address) {
+      toast.error('Connect your wallet first.')
+      return
+    }
+
+    if (!isOnBase) {
+      toast.error('You are not on Base.')
+      return
+    }
+
+    if (!hasWinningBet) {
+      toast.error('No winning bet to claim.')
+      return
+    }
+
+    setPendingAction('claim')
+    writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: BasePlayPredictionABI,
+      functionName: 'claim',
+      args: [BigInt(proposal.id)],
     })
   }
 
@@ -187,66 +300,120 @@ export default function ProposalCard({
     <article className="proposal-card">
       <div className="proposal-card-header">
         <div>
-          <span className="eyebrow">Proposal #{proposal.id}</span>
-          <h3>{proposal.title}</h3>
-          <p className="proposal-description">{proposal.description}</p>
+          <span className="eyebrow">Pool #{proposal.id}</span>
+          <h3>{teamA} vs {teamB}</h3>
+          <p className="proposal-description">Pick the winning team, place an ETH bet before the deadline, and claim after the result is set.</p>
         </div>
-        <span className={isEnded ? 'status-pill ended' : 'status-pill live'}>
-          {isEnded ? '已结束' : '进行中'}
+        <span className={resolved ? 'status-pill ended' : 'status-pill live'}>
+          {resolved ? 'Resolved' : isBetClosed ? 'Awaiting Result' : 'Open'}
         </span>
       </div>
 
       <div className="proposal-meta">
-        <p>Deadline: {formatDeadline(proposal.deadline)}</p>
-        <p>{isEnded ? '状态：投票结束' : `倒计时：${countdown}`}</p>
+        <p>Deadline: {formatDeadline(deadline)}</p>
+        <p>{resolved ? 'Status: result set' : isBetClosed ? 'Status: betting closed' : `Countdown: ${countdown}`}</p>
+        <p>Total Pool: {formatEther(totalPool)} ETH</p>
       </div>
 
       <div className="vote-stats-grid">
         <div className="vote-stat yes">
-          <span>Yes</span>
-          <strong>{yesVotes.toString()}</strong>
-          <small>{yesPercent}%</small>
+          <span>{teamA}</span>
+          <strong>{formatEther(totalA)} ETH</strong>
+          <small>{teamAPercent}%</small>
         </div>
         <div className="vote-stat no">
-          <span>No</span>
-          <strong>{noVotes.toString()}</strong>
-          <small>{noPercent}%</small>
+          <span>{teamB}</span>
+          <strong>{formatEther(totalB)} ETH</strong>
+          <small>{teamBPercent}%</small>
         </div>
       </div>
 
-      {hasVoted && !isEnded && (
-        <p className="info-banner">已投票提示：当前地址已完成投票，按钮已禁用。</p>
+      {!!address && (
+        <p className="info-banner">
+          Your bets: {teamA} {formatEther(betAAmount)} ETH, {teamB} {formatEther(betBAmount)} ETH
+          {alreadyClaimed ? ' | Already claimed' : ''}
+        </p>
       )}
 
-      {isEnded ? (
+      {resolved ? (
         <div className="result-panel">
           <p className="success-banner">{resultText}</p>
-          <p className="muted-text">结束后继续展示 yesVotes、noVotes 和最终结果。</p>
-        </div>
-      ) : (
-        <div className="action-row">
+          <p className="muted-text">Resolved pools remain visible for claiming and final review.</p>
           <button
             className="primary-button"
-            disabled={!canTransact || isBusy || hasVoted || isVoteStateLoading || isEnded}
-            onClick={() => handleVote(true)}
+            disabled={!canTransact || isBusy || !hasWinningBet || alreadyClaimed}
+            onClick={handleClaim}
             type="button"
           >
-            {isBusy && pendingVote === true ? 'Submitting...' : 'Yes'}
+            {isBusy && pendingAction === 'claim'
+              ? 'Submitting...'
+              : alreadyClaimed
+                ? 'Already Claimed'
+                : 'Claim Reward'}
           </button>
-          <button
-            className="secondary-button"
-            disabled={!canTransact || isBusy || hasVoted || isVoteStateLoading || isEnded}
-            onClick={() => handleVote(false)}
-            type="button"
-          >
-            {isBusy && pendingVote === false ? 'Submitting...' : 'No'}
-          </button>
+        </div>
+      ) : !isBetClosed ? (
+        <div className="action-stack">
+          <input
+            className="bet-amount-input"
+            disabled={isBusy}
+            min="0"
+            onChange={(event) => setBetAmount(event.target.value)}
+            placeholder="Bet amount in ETH"
+            step="0.0001"
+            type="number"
+            value={betAmount}
+          />
+          <div className="action-row">
+            <button
+              className="primary-button"
+              disabled={!canTransact || isBusy || isBetStateLoading}
+              onClick={() => handleBet(1)}
+              type="button"
+            >
+              {isBusy && pendingAction === 'betA' ? 'Submitting...' : `Bet ${teamA}`}
+            </button>
+            <button
+              className="secondary-button"
+              disabled={!canTransact || isBusy || isBetStateLoading}
+              onClick={() => handleBet(2)}
+              type="button"
+            >
+              {isBusy && pendingAction === 'betB' ? 'Submitting...' : `Bet ${teamB}`}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="result-panel">
+          <p className="warning-banner">{resultText}</p>
+          {isOwner ? (
+            <div className="action-row">
+              <button
+                className="primary-button"
+                disabled={!canTransact || isBusy}
+                onClick={() => handleSetResult(1)}
+                type="button"
+              >
+                {isBusy && pendingAction === 'resolveA' ? 'Submitting...' : `Set ${teamA} Winner`}
+              </button>
+              <button
+                className="secondary-button"
+                disabled={!canTransact || isBusy}
+                onClick={() => handleSetResult(2)}
+                type="button"
+              >
+                {isBusy && pendingAction === 'resolveB' ? 'Submitting...' : `Set ${teamB} Winner`}
+              </button>
+            </div>
+          ) : (
+            <p className="muted-text">Waiting for the owner to set the result.</p>
+          )}
         </div>
       )}
 
-      {!isConnected && <p className="muted-text">连接钱包后可参与投票。</p>}
-      {isConnected && !isOnBase && <p className="warning-text-inline">请切换到 Base 链后再投票。</p>}
-      {isEnded && <p className="muted-text">投票结束提示：已结束的提案不再允许投票。</p>}
+      {!isConnected && <p className="muted-text">Connect your wallet to place bets and claim rewards.</p>}
+      {isConnected && !isOnBase && <p className="warning-text-inline">Switch to Base before transacting.</p>}
+      {isBetClosed && !resolved && <p className="muted-text">Betting has ended. Only result settlement is available now.</p>}
     </article>
   )
 }
