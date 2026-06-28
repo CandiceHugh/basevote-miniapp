@@ -134,3 +134,13 @@ Create a local configuration file only if the project expects one:
 ```bash
 cp .env.example .env
 ```
+
+Update values according to the project鈥檚 documented requirements.
+
+Do not commit local environment files or private configuration values.
+
+## Testing
+
+If test scripts are available, run them before submitting changes.
+
+For npm-based projects, this may be:
