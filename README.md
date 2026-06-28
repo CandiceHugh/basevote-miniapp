@@ -66,3 +66,13 @@ yarn install
 Use the command that matches the project configuration.
 
 ## Usage
+
+Start by reviewing the available scripts in the project configuration.
+
+If the project includes a `package.json`, check the `scripts` section:
+
+```bash
+cat package.json
+```
+
+Common development commands may include:
