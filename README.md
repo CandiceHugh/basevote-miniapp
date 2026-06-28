@@ -27,3 +27,13 @@ git clone https://github.com/CandiceHugh/basevote-miniapp.git
 Move into the project directory:
 
 ```bash
+cd basevote-miniapp
+```
+
+## Setup
+
+After cloning the repository, inspect the project files to confirm the required runtime and package manager.
+
+Common files to look for include:
+
+- `package.json`
