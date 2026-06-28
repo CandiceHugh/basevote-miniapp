@@ -37,3 +37,12 @@ After cloning the repository, inspect the project files to confirm the required 
 Common files to look for include:
 
 - `package.json`
+- `pnpm-lock.yaml`
+- `yarn.lock`
+- `package-lock.json`
+- framework-specific configuration files
+- environment example files such as `.env.example`
+
+Install dependencies using the package manager indicated by the repository files.
+
+For npm-based projects:
