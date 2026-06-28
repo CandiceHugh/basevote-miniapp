@@ -105,3 +105,14 @@ A recommended local workflow is:
 8. Open a pull request for review.
 
 ## Project Structure
+
+The exact project structure may vary.
+
+Typical directories in a mini application may include:
+
+- `src/` for application source code
+- `public/` or `assets/` for static files
+- `components/` for reusable interface elements
+- `pages/`, `routes/`, or similar folders for views
+- `styles/` for styling files
+- `tests/` for test files
