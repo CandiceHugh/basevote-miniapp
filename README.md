@@ -116,3 +116,11 @@ Typical directories in a mini application may include:
 - `pages/`, `routes/`, or similar folders for views
 - `styles/` for styling files
 - `tests/` for test files
+
+Refer to the repository contents for the authoritative structure.
+
+## Configuration
+
+If the project requires environment variables, add them through a local environment file.
+
+Look for an example file such as:
