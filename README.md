@@ -46,3 +46,13 @@ Common files to look for include:
 Install dependencies using the package manager indicated by the repository files.
 
 For npm-based projects:
+
+```bash
+npm install
+```
+
+For pnpm-based projects:
+
+```bash
+pnpm install
+```
