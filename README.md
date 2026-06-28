@@ -96,3 +96,12 @@ Use the commands defined in the repository rather than assuming a specific frame
 A recommended local workflow is:
 
 1. Clone the repository.
+2. Install dependencies.
+3. Review the project scripts and configuration.
+4. Start the local development command.
+5. Make changes in a dedicated branch.
+6. Test the changes locally.
+7. Commit clear, focused updates.
+8. Open a pull request for review.
+
+## Project Structure
