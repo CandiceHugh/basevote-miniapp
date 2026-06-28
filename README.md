@@ -76,3 +76,13 @@ cat package.json
 ```
 
 Common development commands may include:
+
+```bash
+npm run dev
+```
+
+```bash
+npm start
+```
+
+```bash
