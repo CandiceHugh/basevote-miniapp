@@ -56,3 +56,13 @@ For pnpm-based projects:
 ```bash
 pnpm install
 ```
+
+For Yarn-based projects:
+
+```bash
+yarn install
+```
+
+Use the command that matches the project configuration.
+
+## Usage
