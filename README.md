@@ -184,3 +184,13 @@ Before opening a pull request:
 ## Notes
 
 - This README is intended to serve as a practical starting point.
+- Add project-specific details as the implementation evolves.
+- Keep setup instructions current with the actual files in the repository.
+- Avoid documenting commands that are not supported by the project.
+- Prefer concise explanations that help new contributors get started quickly.
+
+## License
+
+No license information is provided in the original README.
+
+If a license is added to the repository, update this section with the correct details.
