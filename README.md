@@ -124,3 +124,13 @@ Refer to the repository contents for the authoritative structure.
 If the project requires environment variables, add them through a local environment file.
 
 Look for an example file such as:
+
+```bash
+.env.example
+```
+
+Create a local configuration file only if the project expects one:
+
+```bash
+cp .env.example .env
+```
