@@ -7,3 +7,13 @@
 Repository: <https://github.com/CandiceHugh/basevote-miniapp.git>
 
 This README provides a clear starting point for cloning, setting up, running, and contributing to the project.
+
+## Features
+
+- Maintains the `basevote-miniapp` project identity.
+- Provides a single place for setup and usage guidance.
+- Supports local development from the repository source.
+- Can be expanded as the project grows.
+- Includes notes for contributors and maintainers.
+
+## Repository
