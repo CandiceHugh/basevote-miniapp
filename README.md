@@ -174,3 +174,13 @@ Confirm the correct command in the project scripts before running it.
 Contributions should be clear, focused, and easy to review.
 
 Before opening a pull request:
+
+- Make sure the project installs successfully.
+- Run available tests.
+- Run available formatting or linting commands.
+- Keep commits scoped to a single purpose when possible.
+- Update documentation when behavior or setup steps change.
+
+## Notes
+
+- This README is intended to serve as a practical starting point.
