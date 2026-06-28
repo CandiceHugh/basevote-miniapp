@@ -154,3 +154,14 @@ Or:
 ```bash
 npm run test
 ```
+
+Use the test command provided by the repository configuration.
+
+## Building
+
+If a build script is defined, run it to verify that the project can be packaged successfully.
+
+For npm-based projects, this may be:
+
+```bash
+npm run build
