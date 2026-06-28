@@ -86,3 +86,13 @@ npm start
 ```
 
 ```bash
+npm run build
+```
+
+Use the commands defined in the repository rather than assuming a specific framework or toolchain.
+
+## Development Workflow
+
+A recommended local workflow is:
+
+1. Clone the repository.
