@@ -165,3 +165,12 @@ For npm-based projects, this may be:
 
 ```bash
 npm run build
+```
+
+Confirm the correct command in the project scripts before running it.
+
+## Contributing
+
+Contributions should be clear, focused, and easy to review.
+
+Before opening a pull request:
