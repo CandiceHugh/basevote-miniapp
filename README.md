@@ -144,3 +144,13 @@ Do not commit local environment files or private configuration values.
 If test scripts are available, run them before submitting changes.
 
 For npm-based projects, this may be:
+
+```bash
+npm test
+```
+
+Or:
+
+```bash
+npm run test
+```
