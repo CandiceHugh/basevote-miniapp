@@ -17,3 +17,13 @@ This README provides a clear starting point for cloning, setting up, running, an
 - Includes notes for contributors and maintainers.
 
 ## Repository
+
+Clone the project from GitHub:
+
+```bash
+git clone https://github.com/CandiceHugh/basevote-miniapp.git
+```
+
+Move into the project directory:
+
+```bash
